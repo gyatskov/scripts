@@ -1,0 +1,127 @@
+#---------------------------------------------------------------#
+# ----------------------- NEGATIVES # --------------------------#
+#---------------------------------------------------------------#
+()
+()d
+()()
+(int)()
+## Plain expressions
+abd
+a + s
+a * b
+a b c
+
+(*a)
+(*ab)
+(* a b)
+(*b * *c)
+
+return static_cast<float32_t>(x)*visu::utils::units::degree;
+
+(a*b)*(c*d)
+(const* const int)*(int*const)
+(a*b) 
+(a * b)
+
+## Function declarations
+void foo(a) const
+bool operator == (const VersionInfo &vers) const
+virtual const utl::Slice<vec::Vector3f>& operator[](const uint32_t idx) const = 0;
+bool operator== (const Dir& other) const
+logger::addLog(logger::LOGGER_WARNING, "AssimAdapter::convertLight (point) light type is " PRId32, static_cast<int32_t>(light.mType));
+
+## Function calls
+foo(a)
+
+## Function call expressions
+foo(a) * b
+
+## Template function call
+foo<T>(a)
+
+(int) (v*a
+ *b)
+
+#---------------------------------------------------------------#
+# ----------------------- POSITIVES # --------------------------#
+#---------------------------------------------------------------#
+
+# Simple examples #
+(int)a
+(int) a
+(void)ab
+(void) ab
+
+(void) (a)
+(void) (zdf)
+
+# Array types
+(char[]) (a) ;
+(char[]) (a).
+
+# Function calls
+(void)(f(a) + b)
+(void)f()
+(bool) f(a)
+f( (int)f )
+(void)strncpy(a,b,c)
+(bool) (f(a))
+
+# Structs and arrays
+(char) a.z9
+(char) a.f[2]
+(X) a
+
+# Pointers
+(int*) p
+(char*) (&f);
+(long*) &f
+(char) *f ,
+(char) (*f) ,
+(long) f->foo
+(const char* const) (a)
+
+# Namespaces
+(ren::whatev)a
+(ren::whatev)(a)
+(ren::whatev)(ben::a)
+(ren::whatev)(*ben::a)
+
+# References
+(VersionInfo &) a
+(const VersionInfo &) a
+(const VersionInfo* &) a
+
+# Integer values
+(long)(2)
+(long) (2)
+(long) (2U)
+(long) (2UL)
+
+# float values
+(float) (2.0F)
+(double) (2.0F)
+
+# Arithmetic expressions
+(float) (a+b-c)
+(float)(a+b+3.0F)
+(double)(a/b*3.0F)
+(float)(a+b+3.0F )
+(float)( a+b+3.0F)
+( float)( a+b+3.0F )
+(float )( a+b+3.0F )
+( float )( a+b+3.0F )
+
+# Spaces in expression
+( float )( a+ b + 3.0F )
+
+# Structs
+(struct MyStruct*)a
+(struct MyStruct*) a
+( struct MyStruct* )  a
+( struct MyStruct * )  a
+(struct MyStruct*)(a)
+
+# Recursive patterns
+(long)((long)a + (long)(b))
+(int)((a) + b)
