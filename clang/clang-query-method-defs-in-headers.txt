@@ -1,0 +1,3 @@
+set bind-root false 
+match functionDecl(isExpansionInMainFile(), hasBody(anything())).bind("fHeaderWithImpl")
+

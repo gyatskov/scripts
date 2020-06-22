@@ -1,0 +1,4 @@
+set bind-root false 
+set output print
+match namedDecl(matchesName("SomePrefix_.+")).bind("struct")
+
