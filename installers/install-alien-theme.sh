@@ -4,6 +4,9 @@
 ##
 ## Installs a symlink to the alien zsh theme in oh-my-zsh
 ##
+## Requirements:
+## * git
+## * oh-my-zsh
 
 set -e
 

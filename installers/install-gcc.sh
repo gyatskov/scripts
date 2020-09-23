@@ -2,6 +2,11 @@
 ##
 ## @author Gennadij Yatskov (gennadij@yatskov.de)
 ##
+## Installs gcc-8 and adds it as a system alternative
+##
+## @note Intended to be used on older Ubuntu versions
+
+set -o errexit
 
 sudo apt-get install build-essential software-properties-common -y
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y

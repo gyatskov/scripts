@@ -2,8 +2,14 @@
 ##
 ## @author Gennadij Yatskov (gennadij@yatskov.de)
 ##
-## Installs clang8 on Ubuntu 16.04
+## Installs clang-8 and adds it as a system alternative
 ##
+## @note Intended to be used on older Ubuntu versions
+
+## Requirements:
+## * wget
+
+set -o errexit
 
 sudo apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-8 main"
 wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -

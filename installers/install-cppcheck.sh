@@ -2,11 +2,20 @@
 ##
 ## @author Gennadij Yatskov (gennadij@yatskov.de)
 ##
+## Clones cppcheck repository, builds the binary and copies it
+## to the default install directory.
+##
+## Requirements:
+##  * git
+##  * cmake
+
+set -o errexit
 
 git clone https://github.com/danmar/cppcheck.git
-sudo apt install libpcre3 libpcre3-dev
 cd cppcheck
-mkdir build
+sudo apt install libpcre3 libpcre3-dev
 
-make SRCDIR=build CFGDIR=cfg HAVE_RULES=yes -j8 CXXFLAGS="-O2 -DNDEBUG -Wall -Wno-sign-compare -Wno-unused-function"
-ln -s $(realpath cppcheck) /usr/local/bin/cppcheck
+mkdir Release
+cmake -BRelease -H. -DCMAKE_BUILD_TYPE=Release -DHAVE_RULES=ON -DUSE_MATCHCOMPILER=ON
+sudo cmake --build Release --target install --parallel 8
+
