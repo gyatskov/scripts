@@ -4,9 +4,6 @@
 ##
 ## Retrigger a given jenkins job specified by its ID
 ##
-## Main idea taken from here:
-## https://github.com/mdlavin/gerrit-jenkins-retrigger-bot/blob/master/retrigger.sh
-##
 
 set -o nounset
 set -o errexit
@@ -19,28 +16,39 @@ source <(grep = $SCRIPTPATH/config.ini)
 readonly JOB_NAME="$1"
 readonly JOB_ID="$2"
 
-
-readonly COOKIES=`mktemp`
-# -L : follow redirects
-# -s : silent mode
-readonly CURL_OPTIONS="-L -s --cookie $COOKIES --cookie-jar $COOKIES"
-
-# @TODO: Keep cookies or use the ones from installed browsers
-function login()
+## Retrieves crumb using JSON API and downloads according cookie
+function get_crumb_with_cookie()
 {
-    echo -n "Jenkins password for $JENKINS_USER: "
-    read -s JENKINS_PASSWORD
-    curl $CURL_OPTIONS ${JENKINS_URL}/login > /dev/null
-    curl $CURL_OPTIONS --data "j_username=${JENKINS_USER}&j_password=${JENKINS_PASSWORD}" ${CURL_OPTIONS} ${JENKINS_URL}/j_acegi_security_check > /dev/null
-    unset JENKINS_PASSWORD
+    local -r _cookie_file_dst=$1
+    curl --silent --cookie-jar "$_cookie_file_dst" -u $JENKINS_USER:$JENKINS_API_TOKEN \
+        "$JENKINS_URL/crumbIssuer/api/json" \
+        | jq '.crumbRequestField + ":" + .crumb' \
+        | tr -d \"
 }
 
-function retrigger()
-{
-    local -r JENKINS_RETRIGGER_LINK="$JENKINS_URL/job/$JOB_NAME/${JOB_ID}/gerrit-trigger-retrigger-this"
+readonly cookie_file="$(mktemp)"
+readonly header="$(get_crumb_with_cookie $cookie_file)"
+echo "$header, $cookie_file"
 
-    curl $CURL_OPTIONS $JENKINS_RETRIGGER_LINK
+## Retriggers a jenkins job using a cookie file and Jenkins crumb
+## @param cookie-file:path Path to cookie file
+## @param header:string Crumb string, e.g. "Jenkins-Crumb:xxxxx"
+function retrigger_with_cookie()
+{
+    local -r _cookie_file_src=$1
+    local -r _header=$2
+
+    curl --request POST \
+        --location \
+        --cookie "$_cookie_file_src" \
+        --user $JENKINS_USER:$JENKINS_API_TOKEN  \
+        --header $_header \
+        --silent \
+        --show-error \
+        --output /dev/null \
+        --write-out 'HTTP-Result: %{http_code}\n' \
+        "$JENKINS_URL/job/$JOB_NAME/${JOB_ID}/gerrit-trigger-retrigger-this"
 }
 
-login
-retrigger
+retrigger_with_cookie $cookie_file $header
+rm $cookie_file
