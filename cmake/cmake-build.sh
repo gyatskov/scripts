@@ -19,7 +19,7 @@ readonly BUILD_TYPE='debug'
 #    -B "${BUILD_DIR}/${PROJECT}/${PLATFORM}/${BUILD_TYPE}/${SWC}" \
 cmake "$PROJECT_ROOT_DIR" \
     -B "${BUILD_DIR}" \
-    -S "$ROOT_DIR" \
+    -S "${PROJECT_ROOT_DIR}" \
     -G "${GENERATOR}" \
     -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" \
     -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
