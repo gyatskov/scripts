@@ -20,5 +20,4 @@ readonly REMAINING_PARAMETERS=${@:3}
 readonly JQ_FILTER='select(.subject | test("DRAFT") | not )? | .number'
 
 # Appends remaining parameters passed to the script to the get-all-changes-of-user arguments
-#
 ${SCRIPTPATH}/get-all-changes-of-user.sh $OWNER $STATUS --format json $REMAINING_PARAMETERS | jq -r "${JQ_FILTER}"
