@@ -1,4 +1,4 @@
 [config]
-    JENKINS_USER="user"
-    JENKINS_URL="https://jenkins-server"
-    JENKINS_API_TOKEN="xxx"
+    declare -rx JENKINS_USER="user"
+    declare -rx JENKINS_URL="https://jenkins-server"
+    declare -rx JENKINS_API_TOKEN="xxx"
