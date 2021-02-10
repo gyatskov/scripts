@@ -4,21 +4,48 @@
 ##
 ## Get Jenkins build ID of the latest executed build
 ##
+## If such a build exists, it can be either
+##  * still running         (status: Started) or
+##  * finished successfully (status: Successful) or
+##  * failed                (status: Failed)
+##
+## The output can be further parsed using jq
+##
 
 set -o nounset
 set -o errexit
 
 # @see https://stackoverflow.com/questions/4774054/reliable-way-for-a-bash-script-to-get-the-full-path-to-itself/4774063
 readonly SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+# Load configuration
+source <(grep = $SCRIPTPATH/config.ini)
 
-# Gerrit change ID
-readonly CHANGE_ID=$1
+# Retrieve Change-Id from current commit message
+readonly CURRENT_CHANGE_ID="$($SCRIPTPATH/get-change-id.sh)"
 
-# Detector for jenkins entries in the gerrit comments
-readonly JENKINS_ENTRY_REGEX='Patch Set ([[:digit:]]+)\:(.+)Build '
-# Detectors for job ID and job result
-readonly JENKINS_JOB_REGEX='(/[[:digit:]]+/|ABORTED|FAILURE|SUCCESS)'
+# Gerrit change ID, defaults to current commit
+readonly CHANGE_ID="${1:-$CURRENT_CHANGE_ID}"
+readonly GERRIT_QUERY="${CHANGE_ID}"
+# Regex pattern with named capture groups "status", "job_id", "result" where "status" and "result" have the same meaning
+# The result part is optional since a job could be still building
+readonly JOB_PATTERN='Build (?<status>[[:alpha:]]+)[[:space:]]+(.+)job/([a-z0-9-]+)/(?<job_id>[0-9]+)/( : (?<result>[[:alpha:]]+))?'
 
+# Parses last comment from CI Reviewer account
+# into {status: str, job_id: int [, result: str]  } object
+readonly JQ_FILTER=$(cat <<- EOM
+    select(has("number") and has("comments"))
+    | {
+       subject:      (.subject),
+       number:       (.number),
+       last_jenkins: [.comments[]
+                      | select(.reviewer.name == "${GERRIT_CI_REVIEWER_NAME}")
+                      .message][-1]
+      }
+      | select(.last_jenkins)
+      .last_jenkins
+      | capture("${JOB_PATTERN}")
+EOM
+)
 
-# Prints the last job's ID and status in two lines after each other
-${SCRIPTPATH}/get-all-comments.sh "$CHANGE_ID" | grep -E "${JENKINS_ENTRY_REGEX}" | tail -n 1 | grep -oE "${JENKINS_JOB_REGEX}" | tr -d '/'
+$SCRIPTPATH/get-all-comments-filtered.sh "${GERRIT_QUERY}" "${JQ_FILTER}"
+
