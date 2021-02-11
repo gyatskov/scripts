@@ -15,14 +15,14 @@ source <(grep = $SCRIPTPATH/config.ini)
 
 readonly GERRIT_OWNER=$1
 readonly GERRIT_STATUS=open
-readonly GERRIT_QUERY="owner:$GERRIT_OWNER AND status:$GERRIT_STATUS"
+# Criterion to filter rejected changes
+readonly GERRIT_VERIFIED_LABEL='Verified<1'
+readonly GERRIT_QUERY="owner:$GERRIT_OWNER AND status:$GERRIT_STATUS AND label:${GERRIT_VERIFIED_LABEL}"
 
 # Plain-text string that implies a failed build
 readonly FAIL_SUBSTR=' : FAILURE'
 # Regex pattern with named capture group "job_id"
 readonly JOB_PATTERN='job/([a-z0-9-]+)/(?<job_id>[0-9]+)/'
-# Name of the system account used for CI
-readonly CI_REVIEWER_NAME='Jenkins'
 # Last failed Jenkins job ID as field "job_id"
 
 ## Examples for jq filters
@@ -50,7 +50,7 @@ readonly JQ_FILTER=$(cat <<- EOM
     | {
        subject:      (.subject),
        number:       (.number),
-       last_jenkins: [.comments[] | select(.reviewer.name == "${CI_REVIEWER_NAME}" and (.message | test("${FAIL_SUBSTR}"))) .message][-1]
+       last_jenkins: [.comments[] | select(.reviewer.name == "${GERRIT_CI_REVIEWER_NAME}" and (.message | test("${FAIL_SUBSTR}"))) .message][-1]
       }
       | select(.last_jenkins)
       .last_jenkins
