@@ -2,7 +2,8 @@
 ##
 ## @author Gennadij Yatskov (gennadij@yatskov.de)
 ##
-## Retrigger a given jenkins job specified by its ID
+## Retrigger a given jenkins job specified by its ID in case
+## it failed due to false positives.
 ##
 
 set -o nounset
@@ -15,13 +16,18 @@ source <(grep = $SCRIPTPATH/config.ini)
 
 readonly JOB_NAME="$1"
 readonly JOB_ID="$2"
+# TODO: Make file optional:
+#       Not providing this argument shall retrieve all nodes
+declare -r JOBS_FALSE_POSITIVES_FILE="$3"
 
-# TODO:
+# TODO: Make relevant nodes file optional
+$SCRIPTPATH/filter-errors.sh <($SCRIPTPATH/get-pipeline-log.sh "$JOB_NAME" "$JOB_ID") $JOBS_FALSE_POSITIVES_FILE
 
 ## Retrigger conditions:
-## * none of the relevant nodes have been found in the run (broke too early)
-## * none of the failed pipeline node names correspond to relevant nodes listed (other projects failed)
-## * known false-alarms in the relevant nodes occured
+## * If ignoreUnmentionedNodes:
+##  * if none of the relevant nodes have been found in the run (broke too early)
+##  * if none of the failed pipeline node names correspond to relevant nodes listed (other projects failed)
+##  * if known false-alarms in the relevant nodes occured
 
 ## Input: (user name, Gerrit change number)
 ## 1. Look for last failed jenkins job
