@@ -2,7 +2,7 @@
 ##
 ## @author Gennadij Yatskov (gennadij@yatskov.de)
 ##
-## Retrieve progressive job log
+## Retrieves all pipeline nodes for a given job name and ID.
 ##
 
 set -o nounset

@@ -9,7 +9,6 @@
 ##  * Connection timeouts
 ##  * System shutdowns
 ##
-##
 
 set -o nounset
 set -o errexit
@@ -21,11 +20,6 @@ source <(grep '=' $SCRIPTPATH/config.ini)
 
 declare -rx LOG_FILE="$1"
 declare -rx FALSE_POSITIVES_FILE="$2"
-
-if ! command -v combine &> /dev/null; then
-    >&2 echo "Requires 'combine' utility from 'moreutils'"
-    exit 1
-fi
 
 if [ ! -e "$LOG_FILE" ]; then
     >&2 echo "Log file does not exist: ${LOG_FILE}"

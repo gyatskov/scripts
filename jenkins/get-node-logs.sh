@@ -22,10 +22,9 @@ readonly PIPELINE_STATE=FINISHED
 # Pipeline result of interest
 readonly PIPELINE_RESULT=FAILURE
 
-set -x
 function ignore_unmentioned()
 {
-    jq -r '.ignoreUnmentionedNodes' -- "${RETRIGGER_CONFIG_FILE}"
+    jq -r '.ignore_unmentioned_nodes' -- "${RETRIGGER_CONFIG_FILE}"
 }
 
 # Retrieves logs for all nodes
@@ -49,7 +48,6 @@ function node_logs()
 
         $SCRIPTPATH/get-node-log.sh "$JOB_NAME" "$JOB_ID" "$_node_id" > "$JOB_NAME-$JOB_ID-$node_name.log"
     done < relevant_node_names.txt
-
 }
 
 node_logs

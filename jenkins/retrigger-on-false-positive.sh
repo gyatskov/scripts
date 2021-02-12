@@ -24,7 +24,7 @@ declare -r JOBS_FALSE_POSITIVES_FILE="$3"
 $SCRIPTPATH/filter-errors.sh <($SCRIPTPATH/get-pipeline-log.sh "$JOB_NAME" "$JOB_ID") $JOBS_FALSE_POSITIVES_FILE
 
 ## Retrigger conditions:
-## * If ignoreUnmentionedNodes:
+## * If ignore_unmatched_nodes:
 ##  * if none of the relevant nodes have been found in the run (broke too early)
 ##  * if none of the failed pipeline node names correspond to relevant nodes listed (other projects failed)
 ##  * if known false-alarms in the relevant nodes occured
