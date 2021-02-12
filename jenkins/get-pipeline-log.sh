@@ -15,9 +15,6 @@ source <(grep '=' $SCRIPTPATH/config.ini)
 
 declare -rx JOB_NAME="$1"
 declare -rx JOB_ID="$2"
-# TODO: Make file optional:
-#       Not providing this argument shall retrieve all nodes
-declare -r JOBS_RELEVANT_NODES_FILE="$3"
 
 # Pipeline state of interest
 readonly PIPELINE_STATE=FINISHED
@@ -32,18 +29,11 @@ readonly JQ_FILTER=$(cat <<- EOM
 EOM
 )
 
-# Retrieves all pipeline nodes
-function pipeline_nodes()
-{
-    local -r _nodes_url="${JENKINS_URL}/blue/rest/organizations/jenkins/pipelines/${JOB_NAME}/runs/${JOB_ID}/nodes/"
-    curl -u "${JENKINS_USER}:${JENKINS_API_TOKEN}"  \
-        --silent \
-        --show-error \
-        "$_nodes_url"
-}
-
 # Retrieves log of one particular pipeline node
-function pipeline_log()
+#
+# @param pipeline_node Node id
+#
+function node_log()
 {
     local -r _pipeline_node=$1
     local -r _node_log_url="${JENKINS_URL}/blue/rest/organizations/jenkins/pipelines/${JOB_NAME}/runs/${JOB_ID}/nodes/${_pipeline_node}/log/?start=0&download=true"
