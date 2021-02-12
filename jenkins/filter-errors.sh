@@ -31,9 +31,9 @@ if [ ! -e "$FALSE_POSITIVES_FILE" ]; then
 fi
 
 # Prints PCRE style pattern for errors
-function problem_matcher()
+function problem_matchers()
 {
-    jq -r '.problem_matcher' -- "$FALSE_POSITIVES_FILE"
+    jq -r '.problem_matchers[]' -- "$FALSE_POSITIVES_FILE"
 }
 
 # Prints all false positive fixed substrings
@@ -53,7 +53,7 @@ function filter_all_errors()
 {
     local -r _log_file="$1"
 
-    grep -P "$(problem_matcher)" -- "$_log_file"
+    grep -P -f <(problem_matchers) -- "$_log_file"
 }
 
 # Filters (discards) lines matching fixed substrings
