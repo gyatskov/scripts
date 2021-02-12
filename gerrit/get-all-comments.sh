@@ -2,8 +2,7 @@
 ##
 ## @author Gennadij Yatskov (gennadij@yatskov.de)
 ##
-## Get all comments for current patchset of a given change.
-## This could be used to retrieve all of Jenkins results and job URLs.
+## Get all comments for a given query as JSON.
 ##
 
 set -o nounset
@@ -14,9 +13,6 @@ readonly SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 # Load configuration
 source <(grep = $SCRIPTPATH/config.ini)
 
-readonly GERRIT_QUERY=''
-readonly JQ_FILTER='.comments[]?.message'
+readonly GERRIT_QUERY=$1
 
-readonly CHANGE_ID=$1
-
-ssh -p $GERRIT_PORT $GERRIT_USER@$GERRIT_HOST gerrit query "$GERRIT_QUERY" --comments --format json $CHANGE_ID | jq "$JQ_FILTER"
+ssh -p $GERRIT_PORT $GERRIT_USER@$GERRIT_HOST gerrit query "$GERRIT_QUERY" --comments --format json
