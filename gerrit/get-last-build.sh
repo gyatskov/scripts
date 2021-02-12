@@ -2,14 +2,12 @@
 ##
 ## @author Gennadij Yatskov (gennadij@yatskov.de)
 ##
-## Get Jenkins build ID of the latest executed build
+## Get Jenkins build information of the latest executed build as JSON.
 ##
 ## If such a build exists, it can be either
 ##  * still running         (status: Started) or
 ##  * finished successfully (status: Successful) or
 ##  * failed                (status: Failed)
-##
-## The output can be further parsed using jq
 ##
 
 set -o nounset
@@ -28,24 +26,14 @@ readonly CHANGE_ID="${1:-$CURRENT_CHANGE_ID}"
 readonly GERRIT_QUERY="${CHANGE_ID}"
 # Regex pattern with named capture groups "status", "job_id", "result" where "status" and "result" have the same meaning
 # The result part is optional since a job could be still building
-readonly JOB_PATTERN='Build (?<status>[[:alpha:]]+)[[:space:]]+(.+)job/([a-z0-9-]+)/(?<job_id>[0-9]+)/( : (?<result>[[:alpha:]]+))?'
+readonly JOB_UPDATE_PATTERN='Build (?<status>[[:alpha:]]+)[[:space:]]+(.+)job/([a-z0-9-]+)/(?<job_id>[0-9]+)/( : (?<result>[[:alpha:]]+))?'
 
 # Parses last comment from CI Reviewer account
 # into {status: str, job_id: int [, result: str]  } object
 readonly JQ_FILTER=$(cat <<- EOM
-    select(has("number") and has("comments"))
-    | {
-       subject:      (.subject),
-       number:       (.number),
-       last_jenkins: [.comments[]
-                      | select(.reviewer.name == "${GERRIT_CI_REVIEWER_NAME}")
-                      .message][-1]
-      }
-      | select(.last_jenkins)
-      .last_jenkins
-      | capture("${JOB_PATTERN}")
+    [.[] | select(.reviewer.name == "${GERRIT_CI_REVIEWER_NAME}" ).message][-1]
+    | capture("${JOB_UPDATE_PATTERN}")
 EOM
 )
 
-$SCRIPTPATH/get-all-comments-filtered.sh "${GERRIT_QUERY}" "${JQ_FILTER}"
-
+$SCRIPTPATH/get-all-comments-filtered.sh "${GERRIT_QUERY}" | jq "$JQ_FILTER"
