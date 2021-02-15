@@ -16,11 +16,6 @@ source <(grep '=' $SCRIPTPATH/config.ini)
 declare -rx JOB_NAME="$1"
 declare -rx JOB_ID="$2"
 
-# Pipeline state of interest
-readonly PIPELINE_STATE=FINISHED
-# Pipeline result of interest
-readonly PIPELINE_RESULT=FAILURE
-
 # Retrieves all pipeline nodes
 function pipeline_nodes()
 {
