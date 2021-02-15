@@ -24,7 +24,6 @@ function node_log()
 {
     local -r _pipeline_node=$1
     local -r _node_log_url="${JENKINS_URL}/blue/rest/organizations/jenkins/pipelines/${JOB_NAME}/runs/${JOB_ID}/nodes/${_pipeline_node}/log/?start=0&download=true"
-    echo "$_node_log_url" 1>&2
     curl -u "${JENKINS_USER}:${JENKINS_API_TOKEN}" \
         --silent \
         --show-error \
