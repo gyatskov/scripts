@@ -2,28 +2,78 @@
 ##
 ## @author Gennadij Yatskov (gennadij@yatskov.de)
 ##
-## Retrigger a given jenkins job specified by its ID in case
-## it failed due to false positives.
+## Analyzes a build and returns "non-trivial" errors by filtering out
+## the false positives.
 ##
 
 set -o nounset
 set -o errexit
 
 # @see https://stackoverflow.com/questions/4774054/reliable-way-for-a-bash-script-to-get-the-full-path-to-itself/4774063
-readonly SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+declare -rx SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 # Load configuration
 source <(grep = $SCRIPTPATH/config.ini)
 
-readonly JOB_NAME="$1"
-readonly JOB_ID="$2"
+declare -rx JOB_NAME="$1"
+declare -rx JOB_ID="$2"
 # TODO: Make file optional:
 #       Not providing this argument shall retrieve all nodes
-declare -r JOBS_FALSE_POSITIVES_FILE="$3"
+declare -rx JOBS_FALSE_POSITIVES_FILE="$3"
 
-readonly JQ_FILTER=$(cat <<- 'EOM'
-    .[0] as $configured_nodes | .[1] as $returned_nodes | $returned_nodes | map(select ([.displayName] | inside($configured_nodes | .nodes | map(.node_name))))
+readonly JQ_FILTER_JOIN=$(cat <<- 'EOM'
+    .[0] as $configured_nodes | .[1] as $returned_nodes
+    | $returned_nodes
+    | map(select ([.displayName] | inside($configured_nodes | .nodes | map(.node_name))))
 EOM
 )
+
+readonly SEPARATOR=,
+
+readonly JQ_FILTER_MAP=$(cat <<- EOM
+    #map( {id, displayName} )[]
+    map( (.id | tostring) + "$SEPARATOR" + (.displayName) )[]
+EOM
+)
+
+function _get_node()
+{
+    local -r _job_node_name=$1
+    local -r JQ_FILTER_NODE_NAME=$(cat <<- EOM
+        .nodes | map(select(.node_name == "$_job_node_name"))[]
+EOM
+    )
+    jq "$JQ_FILTER_NODE_NAME"
+}
+export -f _get_node
+
+function _analyze_node()
+{
+    local -r _job_node_id=$1
+    local -r _job_node_name=$2
+
+
+    local -r _filtered_node_file=$(mktemp -p /tmp filtered_node.XXX)
+    (_get_node $_job_node_name < $JOBS_FALSE_POSITIVES_FILE) > $_filtered_node_file
+
+    local -r _root_node_file=$(mktemp -p /tmp root_node.XXX)
+    (_get_node "root" < $JOBS_FALSE_POSITIVES_FILE) > $_root_node_file
+
+    $SCRIPTPATH/get-node-log.sh $JOB_NAME $JOB_ID $_job_node_id  \
+        | $SCRIPTPATH/filter-errors.sh "$_root_node_file" \
+        | $SCRIPTPATH/filter-errors.sh "$_filtered_node_file"
+}
+export -f _analyze_node
+
+function analyze_node()
+{
+    local -r _pair="$1"
+    local -r _job_node_id=${_pair%%,*}
+    local -r _job_node_name=${_pair##*,}
+
+    echo "Remaining errors for $_job_node_name ($_job_node_id):"
+    _analyze_node $_job_node_id $_job_node_name
+}
+export -f analyze_node
 
 # 1. Get all nodes in build
 # 2. Filter failed and configured nodes
@@ -32,9 +82,9 @@ EOM
 #       3.2 Filter real errors
 #       3.3 Print any real errors
 
-jq -s "$JQ_FILTER" -- $JOBS_FALSE_POSITIVES_FILE <($SCRIPTPATH/get-nodes-failed.sh $JOB_NAME $JOB_ID) | jq 'map(.displayName)'
-exit 0
-$SCRIPTPATH/filter-errors.sh <($SCRIPTPATH/get-pipeline-log.sh "$JOB_NAME" "$JOB_ID") $JOBS_FALSE_POSITIVES_FILE
+jq -s "$JQ_FILTER_JOIN" -- $JOBS_FALSE_POSITIVES_FILE <($SCRIPTPATH/get-nodes-failed.sh $JOB_NAME $JOB_ID) \
+    | jq -rc "$JQ_FILTER_MAP" \
+    | xargs -I{} bash -c 'analyze_node $1' -- {}
 
 ## Retrigger conditions:
 ## * If ignore_unmatched_nodes:
