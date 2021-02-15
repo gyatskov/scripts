@@ -2,7 +2,6 @@
 ##
 ## @author Gennadij Yatskov (gennadij@yatskov.de)
 ##
-## Retrieve progressive job log
 ##
 
 set -o nounset
@@ -17,19 +16,6 @@ declare -rx JOB_NAME="$1"
 declare -rx JOB_ID="$2"
 declare -rx JOB_NODE_ID="$3"
 
-# Pipeline state of interest
-readonly PIPELINE_STATE=FINISHED
-# Pipeline result of interest
-readonly PIPELINE_RESULT=FAILURE
-
-# Filter pipelines with the above variables and transform into '<node_id>;<node_name>' tuple lines
-readonly JQ_FILTER=$(cat <<- EOM
-    .[]
-    | select(.result == "${PIPELINE_RESULT}" and .state == "${PIPELINE_STATE}")
-    | {displayName, id, result, state} | (.id+";"+.displayName)
-EOM
-)
-
 # Retrieves log of one particular pipeline node
 #
 # @param pipeline_node Node id
@@ -40,6 +26,7 @@ function node_log()
     local -r _node_log_url="${JENKINS_URL}/blue/rest/organizations/jenkins/pipelines/${JOB_NAME}/runs/${JOB_ID}/nodes/${_pipeline_node}/log/?start=0&download=true"
     echo "$_node_log_url" 1>&2
     curl -u "${JENKINS_USER}:${JENKINS_API_TOKEN}" \
+        --silent \
         --show-error \
        "$_node_log_url"
 }
