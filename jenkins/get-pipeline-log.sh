@@ -2,7 +2,7 @@
 ##
 ## @author Gennadij Yatskov (gennadij@yatskov.de)
 ##
-## Retrieve progressive job log
+## Returns each node's complete log in a pipeline
 ##
 
 set -o nounset
@@ -29,24 +29,8 @@ readonly JQ_FILTER=$(cat <<- EOM
 EOM
 )
 
-# Retrieves log of one particular pipeline node
-#
-# @param pipeline_node Node id
-#
-function node_log()
-{
-    local -r _pipeline_node=$1
-    local -r _node_log_url="${JENKINS_URL}/blue/rest/organizations/jenkins/pipelines/${JOB_NAME}/runs/${JOB_ID}/nodes/${_pipeline_node}/log/?start=0&download=true"
-    echo "$_node_log_url" 1>&2
-    curl -u "${JENKINS_USER}:${JENKINS_API_TOKEN}" \
-        --show-error \
-       "$_node_log_url"
-}
-# Make function accessible in subshell
-export -f pipeline_log
-
 # Check relevance of each returned node and retrieve its log in case
-pipeline_nodes \
+$SCRIPTPATH/get-nodes.sh \
     | jq -r "${JQ_FILTER}" \
     | xargs -I{} bash -c 'nodeName=${1##*;}; nodeId=${1%%;*}; if(grep "${nodeName}" "$2"); then pipeline_log "$nodeId"; fi' -- {} "$JOBS_RELEVANT_NODES_FILE"
 
