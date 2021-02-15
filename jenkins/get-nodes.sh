@@ -13,13 +13,23 @@ readonly SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 # Load configuration
 source <(grep '=' $SCRIPTPATH/config.ini)
 
+function usage()
+{
+    echo "Usage: $0 <jenkins-job-name> <jenkins-job-id>"
+    echo ""
+    echo "Examples:"
+    echo "Get nodes in pipeline 'code-review' with id 123456:"
+    echo "$0 code-review 123456"
+    echo ""
+}
+
+if [[ $# -ne 2 ]]; then
+    usage
+    exit 1
+fi
+
 declare -rx JOB_NAME="$1"
 declare -rx JOB_ID="$2"
-
-# Pipeline state of interest
-readonly PIPELINE_STATE=FINISHED
-# Pipeline result of interest
-readonly PIPELINE_RESULT=FAILURE
 
 # Retrieves all pipeline nodes
 function pipeline_nodes()
