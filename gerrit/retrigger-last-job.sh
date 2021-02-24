@@ -14,7 +14,6 @@ readonly SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 source <(grep = $SCRIPTPATH/config.ini)
 
 readonly GERRIT_CHANGE_ID=${1:-"$($SCRIPTPATH/get-change-id.sh)"}
-readonly GERRIT_QUERY="$GERRIT_CHANGE_ID"
 
 # Generates bash source code
 readonly JQ_EXTRACTOR=$(cat <<- EOM
@@ -24,6 +23,6 @@ EOM
 )
 
 # Evaluates extracted bash code
-eval "$($SCRIPTPATH/get-last-build.sh | jq -r "$JQ_EXTRACTOR")"
+eval "$($SCRIPTPATH/get-last-build.sh $GERRIT_CHANGE_ID | jq -r "$JQ_EXTRACTOR")"
 # Retriggers job
 $SCRIPTPATH/../jenkins/retrigger-job.sh "${_job_name}" "${_job_id}"
