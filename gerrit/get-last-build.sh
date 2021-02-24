@@ -26,7 +26,7 @@ readonly CHANGE_ID="${1:-$CURRENT_CHANGE_ID}"
 readonly GERRIT_QUERY="${CHANGE_ID}"
 # Regex pattern with named capture groups "status", "job_id", "result" where "status" and "result" have the same meaning
 # The result part is optional since a job could be still building
-readonly JOB_UPDATE_PATTERN='Build (?<status>[[:alpha:]]+)[[:space:]]+(.+)job/(?<job_name>[[:alnum:]-_]+)/(?<job_id>[0-9]+)/( : (?<result>[[:alpha:]]+))?'
+readonly JOB_UPDATE_PATTERN='Build (?<status>[[:alpha:]]+)[[:space:]]+(.+)job/(?<job_name>[[:alnum:]_-]+)/(?<job_id>[0-9]+)/( : (?<result>[[:alpha:]]+))?'
 
 # Parses last comment from CI Reviewer account
 # into {status: str, job_id: int [, result: str]  } object
